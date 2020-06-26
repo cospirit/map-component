@@ -1,0 +1,86 @@
+{
+  "name": "cospirit-map-component",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "lint": " tslint --fix --project ./tsconfig.json"
+  },
+  "dependencies": {
+    "googlemaps": "1.12.0",
+    "leaflet": "1.5.1",
+    "leaflet-draw": "1.0.4",
+    "leaflet-fullscreen": "1.0.2",
+    "leaflet-geosearch": "2.7.0",
+    "leaflet-pegman": "0.1.2",
+    "leaflet-sidebar-v2": "3.2.1",
+    "leaflet.gridlayer.googlemutant": "0.7.1",
+    "geoportal-extensions-leaflet": "2.0.3",
+    "lodash": "4.17.15",
+    "vue": "2.6.10",
+    "vue-class-component": "6.3.2",
+    "vue-property-decorator": "7.3.0",
+    "vue2-leaflet": "2.5.2"
+  },
+  "description": "Map component",
+  "devDependencies": {
+    "@types/googlemaps": "^3.38.0",
+    "@types/leaflet": "1.5.8",
+    "@types/leaflet-draw": "1.0.1",
+    "@types/leaflet-geosearch": "2.7.1",
+    "@types/leaflet.gridlayer.googlemutant": "0.4.4",
+    "@types/lodash": "^4.14.134",
+    "@types/node": "^10.14.9",
+    "@types/vue-select": "^2.5.0",
+    "@vue/cli-plugin-babel": "^3.5.5",
+    "@vue/cli-plugin-e2e-cypress": "^3.5.1",
+    "@vue/cli-plugin-eslint": "^3.5.1",
+    "@vue/cli-plugin-pwa": "^3.5.1",
+    "@vue/cli-plugin-typescript": "^3.5.3",
+    "@vue/cli-plugin-unit-jest": "^3.5.3",
+    "@vue/cli-service": "^3.8.4",
+    "@vue/eslint-config-prettier": "^3.0.5",
+    "@vue/eslint-config-typescript": "^3.2.1",
+    "@vue/test-utils": "^1.0.0-beta.29",
+    "babel-core": "7.0.0-bridge.0",
+    "node-sass": "^4.13.1",
+    "sass-loader": "^8.0.2",
+    "ts-jest": "^23.10.5",
+    "typescript": "3.5.3",
+    "vue-template-compiler": "2.6.10"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/recommended",
+      "@vue/typescript"
+    ],
+    "rules": {
+      "vue/script-indent": [
+        2,
+        4
+      ],
+      "vue/html-indent": [
+        2,
+        4
+      ],
+      "vue/max-attributes-per-line": [
+        1,
+        {
+          "singleline": 4
+        }
+      ]
+    },
+    "parserOptions": {
+      "parser": "typescript-eslint-parser"
+    }
+  },
+  "files": [
+    "components/**/*.vue",
+    "utils/*.ts",
+    "assets/*"
+  ]
+}
