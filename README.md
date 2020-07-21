@@ -1,29 +1,50 @@
-# README #
+# Composant Map #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+Fournit les outils nécessaires à l'affichage d'une carte et de données projetées sur les projets VueJs
 
-### What is this repository for? ###
+### Demo ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+Monter le container docker :
 
-### How do I get set up? ###
+`docker-compose up -d`
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+Se connecter sur le container :
 
-### Contribution guidelines ###
+```docker container exec -e COLUMNS=`tput cols` -e LINES=`tput lines` -i -t map-component /bin/bash```
 
-* Writing tests
-* Code review
-* Other guidelines
+Installer les dépendances :
 
-### Who do I talk to? ###
+`npm install`
 
-* Repo owner or admin
-* Other community or team contact
+Lancer le serveur :
+
+`npm run serve`
+
+Se rendre sur la page web : `http://map.localhost`
+
+Pour démonter le container :
+
+`docker-compose stop`
+
+### Installation dans un projet ###
+
+Ajouter la dépendance dans votre package.json en prenant soin de bien choisir la version :
+
+```
+{  
+  ...  
+  "dependencies": {
+    ...
+    "cospirit-map-component": "git+ssh://git@bitbucket.org/cospirit/cospirit-map-component.git#v1.0.0"
+  },  
+  ...  
+}  
+```
+
+Mettre à jour les dépendances :
+
+`npm install cospirit-map-component`
+
+### Utilisation ###
+
+Voir code démo
