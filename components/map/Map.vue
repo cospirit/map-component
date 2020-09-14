@@ -168,6 +168,10 @@ export interface CsmMapControlOptions {
         active: boolean;
         name: string;
     };
+    iris?: {
+        active: boolean;
+        name: string;
+    };
     fullscreen?: {
         active: boolean;
         titleFalse?: string;
@@ -197,6 +201,10 @@ interface CsmMapControlFullOptions extends CsmMapControlOptions {
         name: string;
     };
     address: {
+        active: boolean;
+        name: string;
+    };
+    iris: {
         active: boolean;
         name: string;
     };
@@ -266,6 +274,10 @@ export default class Map extends Vue {
         address: {
             active: false,
             name: "Address",
+        },
+        iris: {
+            active: false,
+            name: "Bicycle",
         },
         fullscreen: {
             active: false,
@@ -372,6 +384,18 @@ export default class Map extends Vue {
                         true: this.fullControlOptions.fullscreen.titleTrue,
                     }
                 }));
+            }
+
+            if (this.fullControlOptions.iris.active) {
+                const wmsLayer =
+                    L.tileLayer.wms('https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/v/wms?SERVICE=WMS&REQUEST=GetMap',
+                        {
+                            format: 'image/png',
+                            transparent: true,
+                            layers: 'STATISTICALUNITS.IRIS'
+                        }
+                    );
+                this.layersControl.addBaseLayer(wmsLayer, 'IRIS');
             }
 
             this.updateOverlayLayersControl();
