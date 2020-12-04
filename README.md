@@ -1,3 +1,5 @@
+![CoSpirit](doc/logo.png)
+
 # Composant Map #
 
 Fournit les outils nécessaires à l'affichage d'une carte et de données projetées sur les projets VueJs
