@@ -1,26 +1,29 @@
 version: "3"
 services:
-  cospirit-map-component:
+  map-component:
     image: cospirit/node:12.16.2
-    container_name: cospirit-map-component
+    container_name: map-component_app
     restart: always
-    working_dir: /srv/cospirit-map-component
+    working_dir: /srv/map-component
     hostname: map
     tty: true
-    networks:
-      - public
-    volumes:
-      - ./:/srv/cospirit-map-component
-      - $SSH_AUTH_SOCK:/ssh-agent
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-proxy"
+      - "traefik.http.routers.map-component.rule=Host(`map-component.cospirit.local`)"
+      - "traefik.http.routers.map-component.entrypoints=web"
+      - "traefik.http.routers.map-component.service=map-component"
+      - "traefik.http.services.intranet-pcm.loadbalancer.server.port=80"
     environment:
       - SSH_AUTH_SOCK=/ssh-agent
+    volumes:
+      - ./:/srv/map-component
+      - $SSH_AUTH_SOCK:/ssh-agent
+    networks:
+      - traefik-proxy
     ports:
       - 80
-    labels:
-      - "traefik.backend=component-cospirit-map"
-      - "traefik.frontend.rule=Host:cospirit-map-component.localhost"
-      - "traefik.docker.network=public"
+
 networks:
-  public:
-    external:
-      name: public
+  traefik-proxy:
+    external: true

@@ -22,7 +22,7 @@ Lancer le serveur :
 
 `npm run serve`
 
-Se rendre sur la page web : `http://map.localhost`
+Se rendre sur la page web : `http://map-component.cospirit.local`
 
 Pour démonter le container :
 
@@ -37,7 +37,7 @@ Ajouter la dépendance dans votre package.json en prenant soin de bien choisir l
   ...  
   "dependencies": {
     ...
-    "cospirit-map-component": "git+ssh://git@bitbucket.org/cospirit/cospirit-map-component.git#v1.0.0"
+    "map-component": "git+ssh://git@github.com/cospirit/map-component.git#v1.0.0"
   },  
   ...  
 }  
@@ -45,7 +45,7 @@ Ajouter la dépendance dans votre package.json en prenant soin de bien choisir l
 
 Mettre à jour les dépendances :
 
-`npm install cospirit-map-component`
+`npm install map-component`
 
 ### Utilisation ###
 
