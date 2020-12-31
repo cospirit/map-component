@@ -1,15 +1,15 @@
 ![CoSpirit](doc/logo.png)
 
-# CoSpirit `map-component`
+# CoSpirit `map-component` [![CircleCI](https://circleci.com/gh/cospirit/map-component.svg?style=shield&circle-token=2b324f7bc99f0f10050972007f73463582941cde)](https://circleci.com/gh/cospirit/map-component)
 
-Fournit les outils nécessaires à l'affichage d'une carte et de données projetées sur les projets VueJs
+This component provides everything necessary to display a map and projections on VueJs applications.
 
 ## Development
 
 ### Project install
 
-    git clone git@github.com:cospirit/front-component.git
-    cd front-component
+    git clone git@github.com:cospirit/map-component.git
+    cd map-component
     make development@install
 
 ### URL
