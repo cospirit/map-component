@@ -1,52 +1,48 @@
 ![CoSpirit](doc/logo.png)
 
-# Composant Map #
+# CoSpirit `map-component`
 
 Fournit les outils nécessaires à l'affichage d'une carte et de données projetées sur les projets VueJs
 
-### Demo ###
+## Development
 
-Monter le container docker :
+### Project install
 
-`docker-compose up -d`
+    git clone git@github.com:cospirit/front-component.git
+    cd front-component
+    make development@install
 
-Se connecter sur le container :
+### URL
 
-```docker container exec -e COLUMNS=`tput cols` -e LINES=`tput lines` -i -t map-component /bin/bash```
+    http://map-component.cospirit.local
 
-Installer les dépendances :
+### Get a shell in containers
 
-`npm install`
+    make development@sh
 
-Lancer le serveur :
+## Tests
 
-`npm run serve`
+### Lints and fixes files
 
-Se rendre sur la page web : `http://map-component.cospirit.local`
+    make development@lint
 
-Pour démonter le container :
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
 
-`docker-compose stop`
+## Install in a project
 
-### Installation dans un projet ###
+Add the dependency in `package.json` file. Be careful to choose de version corresponding to your needs.
 
-Ajouter la dépendance dans votre package.json en prenant soin de bien choisir la version :
-
-```
+```json
 {  
   ...  
   "dependencies": {
     ...
-    "map-component": "git+ssh://git@github.com/cospirit/map-component.git#v1.0.0"
+    "map-component": "git://github.com/cospirit/map-component.git#v1.0.0"
   },  
   ...  
 }  
 ```
+Then update dependencies:
 
-Mettre à jour les dépendances :
-
-`npm install map-component`
-
-### Utilisation ###
-
-Voir code démo
+    npm install map-component
