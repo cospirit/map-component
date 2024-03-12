@@ -130,7 +130,7 @@ interface CsmMapObject {
 
 export interface CsmMarker extends CsmMapObject {
     latLng: [number, number];
-    icon?: L.Icon;
+    icon?: L.Icon | L.DivIcon;
 }
 
 export interface CsmGeoJson extends CsmMapObject {
