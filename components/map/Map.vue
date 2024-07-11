@@ -1,5 +1,12 @@
 <template>
     <div :id="id" class="csm-map">
+        <div v-for="dataLayer in data" :key="dataLayer.id">
+            <div v-for="(object, index) in dataLayer.objects" :key="index">
+                <div v-if="object.options.style.fillColor !== ''">
+                    <hatch-pattern :color="object.options.style.color"></hatch-pattern>
+                </div>
+            </div>
+        </div>
         <l-map
             ref="myMap"
             :zoom="zoom"
@@ -77,7 +84,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import L, { GeoJSONOptions } from "leaflet";
+import L, { GeoJSONOptions, Path } from "leaflet";
 import { LMap, LTileLayer, LControlLayers, LMarker, LControlZoom, LLayerGroup, LGeoJson, LPopup } from "vue2-leaflet";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import "leaflet-fullscreen";
@@ -99,6 +106,7 @@ import Sidebar from "./Sidebar.vue";
 import Constants from "../../utils/Constants";
 import "../../assets/css/map.scss";
 import Marker from "../../utils/Marker";
+import hatchPattern from "./HatchPattern.vue";
 
 interface Size {
     height: number;
@@ -233,6 +241,7 @@ const components = {
     LGeoJson,
     LPopup,
     Sidebar,
+    hatchPattern,
 };
 
 @Component({ components })
@@ -405,6 +414,7 @@ export default class Map extends Vue {
                 L.DomUtil.addClass(this.map.getContainer(), `${this.cursor}-cursor`);
             }
         });
+        console.log(this.data);
     }
 
     protected updated(): void {
@@ -548,6 +558,7 @@ export default class Map extends Vue {
         defaultLatLng: L.LatLng,
         dataLayerId: string
     ) {
+        console.log(dataLayerId, representation, defaultLatLng);
         this.openPopUp(representation, defaultLatLng);
         const mapObjectEvent: CsmMapObjectEvent = {
             representation,
@@ -568,6 +579,18 @@ export default class Map extends Vue {
             dataLayerId,
         };
         this.$emit("object-right-click", mapObjectEvent);
+    }
+
+    protected bringToFront(dataLayerId: string) {
+        // Récupérer la couche LayerGroup
+        const layerGroup = this.overlayLayers[dataLayerId] as L.LayerGroup;
+        if (layerGroup) {
+            layerGroup.eachLayer((layer: L.Layer) => {
+                if ((layer as Path).bringToFront) {
+                    (layer as Path).bringToFront();
+                }
+            });
+        }
     }
 
     protected openPopUp(representation: CsmMarker | CsmGeoJson, defaultLatLng: L.LatLng ) {

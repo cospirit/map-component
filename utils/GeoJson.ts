@@ -29,10 +29,12 @@ export default class GeoJson {
         opacity: number = 1,
         type: GeometryType = "Polygon",
         weight: number = 1,
+        dashArray: string = "",
+        fillColor: string = '',
+        fillOpacity: number = 1,
     ): CsmGeoJson {
-
         const options: GeoJSONOptions = {
-            style: { color, opacity, weight },
+            style: { color, opacity, weight, dashArray, fillColor, fillOpacity},
         };
 
         const geoJson: Feature<Polygon | MultiPolygon | null> = {
