@@ -13,6 +13,7 @@
             @update:center="$emit('update:center', $event)"
             @update:zoom="$emit('update:zoom', $event)"
             @update:bounds="$emit('update:bounds', $event)"
+            style="height: 100%"
         >
             <l-control-layers ref="layersControl" position="topright" />
             <l-tile-layer
@@ -81,23 +82,16 @@ import L, { GeoJSONOptions } from "leaflet";
 import { LMap, LTileLayer, LControlLayers, LMarker, LControlZoom, LLayerGroup, LGeoJson, LPopup } from "vue2-leaflet";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import "leaflet-fullscreen";
-import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 import "leaflet.gridlayer.googlemutant";
-import "leaflet-pegman/leaflet-pegman.min.css";
 import "leaflet-pegman/leaflet-pegman.min";
 import "leaflet-sidebar-v2";
 import "leaflet-draw";
-import "leaflet/dist/leaflet.css";
-import "leaflet-sidebar-v2/css/leaflet-sidebar.css";
-import "leaflet-geosearch/assets/css/leaflet.css";
 import "geoportal-extensions-leaflet";
-import "geoportal-extensions-leaflet/dist/GpPluginLeaflet.css";
 import GeoJson from "geojson";
 import _ from "lodash";
 import {Prop, Watch} from "vue-property-decorator";
 import Sidebar from "./Sidebar.vue";
 import Constants from "../../utils/Constants";
-import "../../assets/css/map.scss";
 import Marker from "../../utils/Marker";
 
 interface Size {
@@ -310,16 +304,16 @@ export default class Map extends Vue {
     protected containerSize: Size = { height: 0, width: 0};
 
     @Prop({ type: String, default: "csm-map" }) protected id!: string;
-    @Prop({ default: 10 }) protected zoom!: number;
-    @Prop(Object) protected center!: L.LatLng;
+    @Prop({ type: [Number, String], default: 10 }) protected zoom!: number;
+    @Prop({ type: [Object, String] }) protected center!: L.LatLng;
     @Prop({ type: Number, default: 20 }) protected maxZoom!: number;
     @Prop({ default: (): Array<[number, number]> => [] }) protected bounds!: L.LatLngBounds | Array<[number, number]>;
     @Prop({ default: null }) protected cursor!: string | null;
-    @Prop({ type: Array, default: () => [] }) protected data!: CsmDataMapLayer[];
+    @Prop({ type: [Array, String], default: () => [] }) protected data!: CsmDataMapLayer[];
     @Prop({ type: String, default: "" }) protected activeSidebarPane!: string;
-    @Prop({ type: Object, default: () => ({}) }) protected drawerOptions!: L.Control.DrawConstructorOptions;
-    @Prop({ type: Object, default: () => ({}) }) protected controlOptions!: CsmMapControlOptions;
-    @Prop({ type: Object, default: () => ({}) }) protected popupOptions!: L.PopupOptions;
+    @Prop({ type: [Object, String], default: () => ({}) }) protected drawerOptions!: L.Control.DrawConstructorOptions;
+    @Prop({ type: [Object, String], default: () => ({}) }) protected controlOptions!: CsmMapControlOptions;
+    @Prop({ type: [Object, String], default: () => ({}) }) protected popupOptions!: L.PopupOptions;
 
     protected mounted(): void {
         this.$nextTick(() => {
@@ -593,3 +587,10 @@ export default class Map extends Vue {
     }
 }
 </script>
+<style src="../../assets/css/map.scss"></style>
+<style src="leaflet/dist/leaflet.css"></style>
+<style src="leaflet-sidebar-v2/css/leaflet-sidebar.css"></style>
+<style src="leaflet-fullscreen/dist/leaflet.fullscreen.css"></style>
+<style src="leaflet-pegman/leaflet-pegman.min.css"></style>
+<style src="leaflet-geosearch/assets/css/leaflet.css"></style>
+<style src="geoportal-extensions-leaflet/dist/GpPluginLeaflet.css"></style>
