@@ -52,7 +52,8 @@ export default class Marker {
 
             return L.divIcon({
                 className: 'custom-marker-icon',
-                html: containerDiv
+                html: containerDiv,
+                iconAnchor
             });
         }
         return L.icon({
