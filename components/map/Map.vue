@@ -9,6 +9,7 @@
             :options="mapOptions"
             @click="mapClick"
             @click.right="mapRightClick"
+            @moveend="hanleMapMoveEnd"
             @draw:created="handleDraw"
             @update:center="$emit('update:center', $event)"
             @update:zoom="$emit('update:zoom', $event)"
@@ -31,17 +32,25 @@
                 position="bottomright"
             />
             <l-layer-group v-for="dataLayer in data" ref="overlayLayers" :key="dataLayer.id" :name="dataLayer.name">
+                <l-marker-cluster ref="markerClusters" :options="markerClusterOptions">
+                    <l-marker
+                        v-for="(object, index) in dataLayer.objects"
+                        v-if="isMarker(object)"
+                        :lat-lng="object.latLng"
+                        :icon="object.icon ? object.icon : dataLayer.icon"
+                        :key="index"
+                        @click="objectClick(object, $event.latlng, dataLayer.id)"
+                        @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
+                    >
+                        <l-popup v-if="object.popupData" :options="popupOptions">
+                            <template v-if="object.popupData">
+                                <slot :popupData="object.popupData" name="popup" />
+                            </template>
+                        </l-popup>
+                    </l-marker>
+                </l-marker-cluster>
                 <template v-for="(object , index) in dataLayer.objects">
-                    <template v-if="isMarker(object)">
-                        <l-marker
-                            :lat-lng="object.latLng"
-                            :icon="object.icon ? object.icon : dataLayer.icon"
-                            :key="index"
-                            @click="objectClick(object, $event.latlng, dataLayer.id)"
-                            @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
-                        />
-                    </template>
-                    <template v-else-if="isGeoJson(object)">
+                    <template v-if="isGeoJson(object)">
                         <l-geo-json
                             :geojson="object.geoJson"
                             :options="object.options"
@@ -79,6 +88,8 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import L, { GeoJSONOptions } from "leaflet";
 import { LMap, LTileLayer, LControlLayers, LMarker, LControlZoom, LLayerGroup, LGeoJson, LPopup } from "vue2-leaflet";
+import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster'
+import 'vue-leaflet-markercluster/dist/style.css';
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import "leaflet-fullscreen";
 import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
@@ -233,6 +244,7 @@ const components = {
     LGeoJson,
     LPopup,
     Sidebar,
+    'l-marker-cluster': Vue2LeafletMarkerCluster,
 };
 
 @Component({ components })
@@ -320,7 +332,13 @@ export default class Map extends Vue {
     @Prop({ type: Object, default: () => ({}) }) protected drawerOptions!: L.Control.DrawConstructorOptions;
     @Prop({ type: Object, default: () => ({}) }) protected controlOptions!: CsmMapControlOptions;
     @Prop({ type: Object, default: () => ({}) }) protected popupOptions!: L.PopupOptions;
-
+    @Prop({
+        type: Object,
+        default: () => ({
+            disableClusteringAtZoom: 16,
+            spiderfyOnMaxZoom: true
+        })
+    }) protected markerClusterOptions!: any;
     protected mounted(): void {
         this.$nextTick(() => {
             this.map = _.get(this.$refs, "myMap.mapObject", null) as L.Map | null;
@@ -513,6 +531,7 @@ export default class Map extends Vue {
         });
     }
 
+
     protected addSidebarToMap(sidebar: L.Control.Sidebar) {
         if (this.map) {
             sidebar.addTo(this.map);
@@ -535,12 +554,21 @@ export default class Map extends Vue {
         this.$emit("map-click", event);
     }
 
+    private clusterOptions = {
+        disableClusteringAtZoom: 17,
+        spiderfyOnMaxZoom: false
+    };
+
     protected mapRightClick(event: L.LeafletMouseEvent) {
         this.$emit("map-right-click", event);
     }
 
     protected handleDraw(event: L.LeafletMouseEvent) {
         this.$emit("map-draw", event);
+    }
+
+    protected hanleMapMoveEnd(event: L.LeafletEvent) {
+        this.$emit("map-move-end", event);
     }
 
     protected objectClick(
@@ -591,5 +619,38 @@ export default class Map extends Vue {
             popupLayer.openPopup(latLng);
         });
     }
+
+    public getAllMarkers(): L.Marker[] {
+        const refs = this.$refs.markerClusters as any[];
+
+        if (!refs || !Array.isArray(refs)) {
+            return [];
+        }
+
+        const markers: L.Marker[] = [];
+
+        refs.forEach(clusterComp => {
+            const cluster = clusterComp.mapObject;
+            markers.push(...cluster.getAllChildMarkers());
+        });
+
+        return markers;
+    }
 }
 </script>
+
+<style>
+.marker-cluster {
+    background-color: rgba(59, 130, 246, 0.6) !important;
+}
+
+.marker-cluster div {
+    background-color: rgba(37, 99, 235, 0.8) !important;
+}
+
+.marker-cluster span {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+</style>
