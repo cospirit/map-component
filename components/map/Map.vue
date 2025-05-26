@@ -242,7 +242,7 @@ export default class Map extends Vue {
     protected tileLayers: CsmTileLayer[] = [
         {
             name: "Satellite",
-            visible: true,
+            visible: false,
             url: "https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
         },
         {
