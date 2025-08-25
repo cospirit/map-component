@@ -16,7 +16,7 @@
     "leaflet-sidebar-v2": "3.2.1",
     "leaflet.gridlayer.googlemutant": "0.7.1",
     "geoportal-extensions-leaflet": "2.0.3",
-    "lodash": "4.17.15",
+    "lodash": "4.17.21",
     "vue": "2.6.10",
     "vue-class-component": "6.3.2",
     "vue-property-decorator": "7.3.0",
