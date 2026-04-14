@@ -9,7 +9,7 @@
             :options="mapOptions"
             @click="mapClick"
             @click.right="mapRightClick"
-            @moveend="hanleMapMoveEnd"
+            @moveend="handleMapMoveEnd"
             @draw:created="handleDraw"
             @update:center="$emit('update:center', $event)"
             @update:zoom="$emit('update:zoom', $event)"
@@ -32,7 +32,7 @@
                 position="bottomright"
             />
             <l-layer-group v-for="dataLayer in data" ref="overlayLayers" :key="dataLayer.id" :name="dataLayer.name">
-                <l-marker-cluster ref="markerClusters" :options="markerClusterOptions">
+                <l-marker-cluster ref="markerClusters" v-if="useCluster" :options="markerClusterOptions">
                     <l-marker
                         v-for="(object, index) in dataLayer.objects"
                         v-if="isMarker(object)"
@@ -49,6 +49,23 @@
                         </l-popup>
                     </l-marker>
                 </l-marker-cluster>
+                <template v-else>
+                    <l-marker
+                        v-for="(object, index) in dataLayer.objects"
+                        v-if="isMarker(object)"
+                        :lat-lng="object.latLng"
+                        :icon="object.icon ? object.icon : dataLayer.icon"
+                        :key="index"
+                        @click="objectClick(object, $event.latlng, dataLayer.id)"
+                        @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
+                    >
+                        <l-popup v-if="object.popupData" :options="popupOptions">
+                            <template v-if="object.popupData">
+                                <slot :popupData="object.popupData" name="popup" />
+                            </template>
+                        </l-popup>
+                    </l-marker>
+                </template>
                 <template v-for="(object , index) in dataLayer.objects">
                     <template v-if="isGeoJson(object)">
                         <l-geo-json
@@ -339,6 +356,10 @@ export default class Map extends Vue {
             spiderfyOnMaxZoom: true
         })
     }) protected markerClusterOptions!: any;
+
+    @Prop({ type: Boolean, default: false })
+    protected useCluster!: boolean;
+
     protected mounted(): void {
         this.$nextTick(() => {
             this.map = _.get(this.$refs, "myMap.mapObject", null) as L.Map | null;
@@ -567,7 +588,7 @@ export default class Map extends Vue {
         this.$emit("map-draw", event);
     }
 
-    protected hanleMapMoveEnd(event: L.LeafletEvent) {
+    protected handleMapMoveEnd(event: L.LeafletEvent) {
         this.$emit("map-move-end", event);
     }
 
