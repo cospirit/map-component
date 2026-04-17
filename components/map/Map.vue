@@ -32,7 +32,12 @@
                 position="bottomright"
             />
             <l-layer-group v-for="dataLayer in data" ref="overlayLayers" :key="dataLayer.id" :name="dataLayer.name">
-                <l-marker-cluster ref="markerClusters" v-if="useCluster" :options="markerClusterOptions">
+                <l-marker-cluster
+                    v-if="!isOwnersLayer(dataLayer.id)"
+                    :key="dataLayer.id"
+                    ref="markerClusters"
+                    :options="getMarkerClusterOptions(dataLayer.id)"
+                >
                     <l-marker
                         v-for="(object, index) in dataLayer.objects"
                         v-if="isMarker(object)"
@@ -52,10 +57,10 @@
                 <template v-else>
                     <l-marker
                         v-for="(object, index) in dataLayer.objects"
-                        v-if="isMarker(object)"
+                        v-if="isMarker(object) && isOwnersLayerVisible()"
                         :lat-lng="object.latLng"
                         :icon="object.icon ? object.icon : dataLayer.icon"
-                        :key="index"
+                        :key="`owner-${index}`"
                         @click="objectClick(object, $event.latlng, dataLayer.id)"
                         @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
                     >
@@ -356,10 +361,6 @@ export default class Map extends Vue {
             spiderfyOnMaxZoom: true
         })
     }) protected markerClusterOptions!: any;
-
-    @Prop({ type: Boolean, default: false })
-    protected useCluster!: boolean;
-
     protected mounted(): void {
         this.$nextTick(() => {
             this.map = _.get(this.$refs, "myMap.mapObject", null) as L.Map | null;
@@ -576,7 +577,7 @@ export default class Map extends Vue {
     }
 
     private clusterOptions = {
-        disableClusteringAtZoom: 17,
+        disableClusteringAtZoom: 12,
         spiderfyOnMaxZoom: false
     };
 
@@ -657,21 +658,64 @@ export default class Map extends Vue {
 
         return markers;
     }
+
+    protected isBoardLayer(dataLayerId: string): boolean {
+        return dataLayerId === "board-recommendation" || dataLayerId === "board-contract";
+    }
+
+    protected isOwnersLayer(dataLayerId: string): boolean {
+        return dataLayerId === "owners";
+    }
+
+    protected isOwnersLayerVisible(): boolean {
+        return this.zoom >= 11;
+    }
+
+    protected getMarkerClusterKey(dataLayerId: string): string {
+        return dataLayerId;
+    }
+
+    protected getMarkerClusterOptions(dataLayerId: string): any {
+        const isBoardLayer = this.isBoardLayer(dataLayerId);
+        const cssClass = dataLayerId === "board-recommendation"
+            ? "marker-cluster marker-cluster--recommendation"
+            : dataLayerId === "board-contract"
+                ? "marker-cluster marker-cluster--contract"
+                : "marker-cluster";
+
+        const iconAnchor = dataLayerId === "board-recommendation"
+            ? new L.Point(26, 14)
+            : dataLayerId === "board-contract"
+                ? new L.Point(14, 26)
+                : new L.Point(20, 20);
+
+        return _.merge({}, this.markerClusterOptions, {
+            singleMarkerMode: false,
+            maxClusterRadius: (zoom: number) => {
+                if (!isBoardLayer) {
+                    return _.get(this.markerClusterOptions, "maxClusterRadius", 50);
+                }
+
+                // Merge board clusters more aggressively at low zoom, then split progressively.
+                if (zoom <= 10) {
+                    return 140;
+                }
+                if (zoom <= 12) {
+                    return 100;
+                }
+
+                return _.get(this.markerClusterOptions, "maxClusterRadius", 50);
+            },
+            iconCreateFunction: (cluster: any) => {
+                return new L.DivIcon({
+                    html: `<div><span>${cluster.getChildCount()}</span></div>`,
+                    className: cssClass,
+                    iconSize: new L.Point(40, 40),
+                    iconAnchor,
+                });
+            },
+        });
+    }
+
 }
 </script>
-
-<style>
-.marker-cluster {
-    background-color: rgba(59, 130, 246, 0.6) !important;
-}
-
-.marker-cluster div {
-    background-color: rgba(37, 99, 235, 0.8) !important;
-}
-
-.marker-cluster span {
-    color: white;
-    font-weight: bold;
-    font-size: 14px;
-}
-</style>

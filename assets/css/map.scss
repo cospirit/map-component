@@ -24,4 +24,44 @@
       }
     }
   }
+  .marker-cluster {
+    background-color: rgba(59, 130, 246, 0.6);
+  }
+
+  .marker-cluster div {
+    background-color: rgba(37, 99, 235, 0.8);
+  }
+
+  .marker-cluster--contract {
+    background-color: rgba(47, 128, 237, 0.6);
+    transform: translate(-6px, 6px);
+    z-index: 510 ;
+  }
+
+  .marker-cluster--contract div {
+    background-color: rgba(47, 128, 237, 0.85);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  }
+
+  .marker-cluster--recommendation {
+    background-color: rgba(224, 14, 74, 0.6);
+    transform: translate(6px, -6px);
+    z-index: 520 ;
+  }
+
+  .marker-cluster--recommendation div {
+    background-color: rgba(224, 14, 74, 0.85);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  }
+
+  .marker-cluster--contract:hover,
+  .marker-cluster--recommendation:hover {
+    z-index: 9999;
+  }
+
+  .marker-cluster span {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+  }
 }
