@@ -33,14 +33,11 @@
             />
             <l-layer-group v-for="dataLayer in data" ref="overlayLayers" :key="dataLayer.id" :name="dataLayer.name">
                 <l-marker-cluster
-                    v-if="!isOwnersLayer(dataLayer.id)"
-                    :key="dataLayer.id"
-                    ref="markerClusters"
-                    :options="getMarkerClusterOptions(dataLayer.id)"
+                    v-if="isClusterLayer(dataLayer)"
+                    :options="getMarkerClusterOptions(dataLayer)"
                 >
                     <l-marker
-                        v-for="(object, index) in dataLayer.objects"
-                        v-if="isMarker(object)"
+                        v-for="(object, index) in getLayerMarkers(dataLayer)"
                         :lat-lng="object.latLng"
                         :icon="object.icon ? object.icon : dataLayer.icon"
                         :key="index"
@@ -48,16 +45,13 @@
                         @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
                     >
                         <l-popup v-if="object.popupData" :options="popupOptions">
-                            <template v-if="object.popupData">
-                                <slot :popupData="object.popupData" name="popup" />
-                            </template>
+                            <slot :popupData="object.popupData" name="popup" />
                         </l-popup>
                     </l-marker>
                 </l-marker-cluster>
                 <template v-else>
                     <l-marker
-                        v-for="(object, index) in dataLayer.objects"
-                        v-if="isMarker(object) && isOwnersLayerVisible()"
+                        v-for="(object, index) in getLayerMarkers(dataLayer)"
                         :lat-lng="object.latLng"
                         :icon="object.icon ? object.icon : dataLayer.icon"
                         :key="`owner-${index}`"
@@ -65,22 +59,18 @@
                         @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
                     >
                         <l-popup v-if="object.popupData" :options="popupOptions">
-                            <template v-if="object.popupData">
-                                <slot :popupData="object.popupData" name="popup" />
-                            </template>
+                            <slot :popupData="object.popupData" name="popup" />
                         </l-popup>
                     </l-marker>
                 </template>
-                <template v-for="(object , index) in dataLayer.objects">
-                    <template v-if="isGeoJson(object)">
-                        <l-geo-json
-                            :geojson="object.geoJson"
-                            :options="object.options"
-                            :key="index"
-                            @click="objectClick(object, $event.latlng, dataLayer.id)"
-                            @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
-                        />
-                    </template>
+                <template v-for="(object, index) in getLayerGeoJson(dataLayer)">
+                    <l-geo-json
+                        :geojson="object.geoJson"
+                        :options="object.options"
+                        :key="index"
+                        @click="objectClick(object, $event.latlng, dataLayer.id)"
+                        @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
+                    />
                 </template>
             </l-layer-group>
             <l-layer-group ref="popupLayer">
@@ -148,7 +138,10 @@ export interface CsmDataMapLayer {
     id: string;
     name: string;
     icon?: L.Icon;
-    objects: Array<CsmMarker|CsmGeoJson>;
+    markerClusterable?: boolean;
+    markerClusters?: Array<CsmMarker>;
+    markerGeoJson?: Array<CsmGeoJson>;
+    objects?: Array<CsmMarker|CsmGeoJson>;
     inLayerControl?: boolean;
 }
 
@@ -560,8 +553,24 @@ export default class Map extends Vue {
         }
     }
 
-    protected handleSidebarTabChange(sidebarPaneId: string) {
-        this.$emit("update:active-sidebar-pane", sidebarPaneId);
+    protected getLayerMarkers(dataLayer: CsmDataMapLayer): CsmMarker[] {
+        if (Array.isArray(dataLayer.markerClusters)) {
+            return dataLayer.markerClusters;
+        }
+
+        return _.filter(dataLayer.objects || [], (object): object is CsmMarker => {
+            return this.isMarker(object);
+        });
+    }
+
+    protected getLayerGeoJson(dataLayer: CsmDataMapLayer): CsmGeoJson[] {
+        if (Array.isArray(dataLayer.markerGeoJson)) {
+            return dataLayer.markerGeoJson;
+        }
+
+        return _.filter(dataLayer.objects || [], (object): object is CsmGeoJson => {
+            return this.isGeoJson(object);
+        });
     }
 
     protected isMarker(representation: CsmMapObject): boolean {
@@ -570,6 +579,14 @@ export default class Map extends Vue {
 
     protected isGeoJson(representation: CsmMapObject): boolean {
         return Constants.MAP_OBJECT_TYPE.GEOJSON === representation.type;
+    }
+
+    protected handleSidebarTabChange(sidebarPaneId: string) {
+        this.$emit("update:active-sidebar-pane", sidebarPaneId);
+    }
+
+    protected isClusterLayer(dataLayer: CsmDataMapLayer): boolean {
+        return !!dataLayer.markerClusterable;
     }
 
     protected mapClick(event: L.LeafletMouseEvent) {
@@ -659,62 +676,50 @@ export default class Map extends Vue {
         return markers;
     }
 
-    protected isBoardLayer(dataLayerId: string): boolean {
-        return dataLayerId === "board-recommendation" || dataLayerId === "board-contract";
-    }
-
     protected isOwnersLayer(dataLayerId: string): boolean {
         return dataLayerId === "owners";
-    }
-
-    protected isOwnersLayerVisible(): boolean {
-        return this.zoom >= 11;
     }
 
     protected getMarkerClusterKey(dataLayerId: string): string {
         return dataLayerId;
     }
 
-    protected getMarkerClusterOptions(dataLayerId: string): any {
-        const isBoardLayer = this.isBoardLayer(dataLayerId);
-        const cssClass = dataLayerId === "board-recommendation"
+    protected getMarkerClusterOptions(dataLayer: CsmDataMapLayer): any {
+
+        const cssClass = dataLayer.id === "board-recommendation"
             ? "marker-cluster marker-cluster--recommendation"
-            : dataLayerId === "board-contract"
+            : dataLayer.id === "board-contract"
                 ? "marker-cluster marker-cluster--contract"
                 : "marker-cluster";
 
-        const iconAnchor = dataLayerId === "board-recommendation"
+        const iconAnchor = dataLayer.id === "board-recommendation"
             ? new L.Point(26, 14)
-            : dataLayerId === "board-contract"
+            : dataLayer.id === "board-contract"
                 ? new L.Point(14, 26)
                 : new L.Point(20, 20);
 
-        return _.merge({}, this.markerClusterOptions, {
-            singleMarkerMode: false,
-            maxClusterRadius: (zoom: number) => {
-                if (!isBoardLayer) {
+        return _.merge(
+            {},
+            this.markerClusterOptions,
+            true,
+            {
+                singleMarkerMode: false,
+                maxClusterRadius: (zoom: number) => {
+                    if (zoom <= 10) return 140;
+                    if (zoom <= 12) return 100;
+
                     return _.get(this.markerClusterOptions, "maxClusterRadius", 50);
-                }
-
-                // Merge board clusters more aggressively at low zoom, then split progressively.
-                if (zoom <= 10) {
-                    return 140;
-                }
-                if (zoom <= 12) {
-                    return 100;
-                }
-
-                return _.get(this.markerClusterOptions, "maxClusterRadius", 50);
-            },
-            iconCreateFunction: (cluster: any) => {
-                return new L.DivIcon({
-                    html: `<div><span>${cluster.getChildCount()}</span></div>`,
-                    className: cssClass,
-                    iconSize: new L.Point(40, 40),
-                    iconAnchor,
-                });
-            },
-        });
+                },
+                iconCreateFunction: (cluster: any) => {
+                    return new L.DivIcon({
+                        html: `<div><span>${cluster.getChildCount()}</span></div>`,
+                        className: cssClass,
+                        iconSize: new L.Point(40, 40),
+                        iconAnchor,
+                    });
+                },
+            }
+        );
     }
 
 }
