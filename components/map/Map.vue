@@ -139,9 +139,8 @@ export interface CsmDataMapLayer {
     name: string;
     icon?: L.Icon;
     markerClusterable?: boolean;
-    markerClusters?: Array<CsmMarker>;
-    markerGeoJson?: Array<CsmGeoJson>;
-    objects?: Array<CsmMarker|CsmGeoJson>;
+    markers?: Array<CsmMarker>;
+    geoJsonObjects?: Array<CsmGeoJson>;
     inLayerControl?: boolean;
 }
 
@@ -554,23 +553,11 @@ export default class Map extends Vue {
     }
 
     protected getLayerMarkers(dataLayer: CsmDataMapLayer): CsmMarker[] {
-        if (Array.isArray(dataLayer.markerClusters)) {
-            return dataLayer.markerClusters;
-        }
-
-        return _.filter(dataLayer.objects || [], (object): object is CsmMarker => {
-            return this.isMarker(object);
-        });
+        return Array.isArray(dataLayer.markers) ? dataLayer.markers : [];
     }
 
     protected getLayerGeoJson(dataLayer: CsmDataMapLayer): CsmGeoJson[] {
-        if (Array.isArray(dataLayer.markerGeoJson)) {
-            return dataLayer.markerGeoJson;
-        }
-
-        return _.filter(dataLayer.objects || [], (object): object is CsmGeoJson => {
-            return this.isGeoJson(object);
-        });
+        return Array.isArray(dataLayer.geoJsonObjects) ? dataLayer.geoJsonObjects : [];
     }
 
     protected isMarker(representation: CsmMapObject): boolean {
@@ -660,7 +647,7 @@ export default class Map extends Vue {
     }
 
     public getAllMarkers(): L.Marker[] {
-        const refs = this.$refs.markerClusters as any[];
+        const refs = this.$refs.markers as any[];
 
         if (!refs || !Array.isArray(refs)) {
             return [];
