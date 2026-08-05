@@ -1,9 +1,16 @@
 import L from "leaflet";
+import {IconPathData} from "@fortawesome/fontawesome-common-types";
 
 type Anchor = "center" | "bottom-center" | "bottom-left";
 
 export default class Marker {
-    public static getCustomMarkerSvgCode(icon: string, width: number = 24, height: number = 24, anchorPosition: Anchor = "bottom-center", azimuth?: number): L.Icon | L.DivIcon {
+    public static getCustomMarkerSvgCode(icon: string, width: number = 24, height: number = 24, anchorPosition: Anchor = "bottom-center", azimuth?: number | null, iconToAdd?: [
+        number,
+        number,
+        string[],
+        string,
+        IconPathData
+    ]): L.Icon | L.DivIcon {
         icon = icon ? icon : "#1B5E20";
         let url = icon;
         let svgCode = "";
@@ -34,6 +41,41 @@ export default class Marker {
                 iconAnchor[1] = Math.floor(height / 2);
                 break;
             }
+        }
+
+        if (iconToAdd !== null && iconToAdd !== undefined) {
+            const pinContainer = document.createElement("div");
+            pinContainer.style.position = "relative";
+            pinContainer.style.width = `${width}px`;
+            pinContainer.style.height = `${height}px`;
+
+            const pinImage = document.createElement("img");
+            pinImage.src = url;
+            pinImage.style.width = "100%";
+            pinImage.style.height = "100%";
+
+            const centerIcon = document.createElement("span");
+            centerIcon.innerHTML = `<svg viewBox='0 0 ${iconToAdd[0]} ${iconToAdd[1]}' width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'>
+                                        <path fill='#FFFFFF' d='${iconToAdd[4]}'/>
+                                    </svg>`;
+            centerIcon.style.position = "absolute";
+            centerIcon.style.left = '35%';
+            centerIcon.style.bottom = '25px';
+            centerIcon.style.lineHeight = "1";
+            centerIcon.style.width = `15px`;
+            centerIcon.style.height = `15px`;
+            centerIcon.style.lineHeight = "1";
+
+            pinContainer.appendChild(pinImage);
+            pinContainer.appendChild(centerIcon);
+
+
+            return L.divIcon({
+                className: "custom-marker-icon",
+                html: pinContainer,
+                iconAnchor,
+                iconSize: [width, height],
+            });
         }
 
         if (azimuth !== null && azimuth !== undefined) {

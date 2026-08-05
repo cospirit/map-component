@@ -9,6 +9,7 @@
             :options="mapOptions"
             @click="mapClick"
             @click.right="mapRightClick"
+            @moveend="handleMapMoveEnd"
             @draw:created="handleDraw"
             @update:center="$emit('update:center', $event)"
             @update:zoom="$emit('update:zoom', $event)"
@@ -31,25 +32,45 @@
                 position="bottomright"
             />
             <l-layer-group v-for="dataLayer in data" ref="overlayLayers" :key="dataLayer.id" :name="dataLayer.name">
-                <template v-for="(object , index) in dataLayer.objects">
-                    <template v-if="isMarker(object)">
-                        <l-marker
-                            :lat-lng="object.latLng"
-                            :icon="object.icon ? object.icon : dataLayer.icon"
-                            :key="index"
-                            @click="objectClick(object, $event.latlng, dataLayer.id)"
-                            @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
-                        />
-                    </template>
-                    <template v-else-if="isGeoJson(object)">
-                        <l-geo-json
-                            :geojson="object.geoJson"
-                            :options="object.options"
-                            :key="index"
-                            @click="objectClick(object, $event.latlng, dataLayer.id)"
-                            @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
-                        />
-                    </template>
+                <l-marker-cluster
+                    v-if="isClusterLayer(dataLayer)"
+                    :options="getMarkerClusterOptions(dataLayer)"
+                >
+                    <l-marker
+                        v-for="(object, index) in getLayerMarkers(dataLayer)"
+                        :lat-lng="object.latLng"
+                        :icon="object.icon ? object.icon : dataLayer.icon"
+                        :key="index"
+                        @click="objectClick(object, $event.latlng, dataLayer.id)"
+                        @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
+                    >
+                        <l-popup v-if="object.popupData" :options="popupOptions">
+                            <slot :popupData="object.popupData" name="popup" />
+                        </l-popup>
+                    </l-marker>
+                </l-marker-cluster>
+                <template v-else>
+                    <l-marker
+                        v-for="(object, index) in getLayerMarkers(dataLayer)"
+                        :lat-lng="object.latLng"
+                        :icon="object.icon ? object.icon : dataLayer.icon"
+                        :key="`owner-${index}`"
+                        @click="objectClick(object, $event.latlng, dataLayer.id)"
+                        @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
+                    >
+                        <l-popup v-if="object.popupData" :options="popupOptions">
+                            <slot :popupData="object.popupData" name="popup" />
+                        </l-popup>
+                    </l-marker>
+                </template>
+                <template v-for="(object, index) in getLayerGeoJson(dataLayer)">
+                    <l-geo-json
+                        :geojson="object.geoJson"
+                        :options="object.options"
+                        :key="index"
+                        @click="objectClick(object, $event.latlng, dataLayer.id)"
+                        @click.right="objectRightClick(object, $event.latlng, dataLayer.id)"
+                    />
                 </template>
             </l-layer-group>
             <l-layer-group ref="popupLayer">
@@ -79,6 +100,8 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import L, { GeoJSONOptions } from "leaflet";
 import { LMap, LTileLayer, LControlLayers, LMarker, LControlZoom, LLayerGroup, LGeoJson, LPopup } from "vue2-leaflet";
+import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster'
+import 'vue-leaflet-markercluster/dist/style.css';
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import "leaflet-fullscreen";
 import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
@@ -115,7 +138,9 @@ export interface CsmDataMapLayer {
     id: string;
     name: string;
     icon?: L.Icon;
-    objects: Array<CsmMarker|CsmGeoJson>;
+    markerClusterable?: boolean;
+    markers?: Array<CsmMarker>;
+    geoJsonObjects?: Array<CsmGeoJson>;
     inLayerControl?: boolean;
 }
 
@@ -233,6 +258,7 @@ const components = {
     LGeoJson,
     LPopup,
     Sidebar,
+    'l-marker-cluster': Vue2LeafletMarkerCluster,
 };
 
 @Component({ components })
@@ -320,6 +346,13 @@ export default class Map extends Vue {
     @Prop({ type: Object, default: () => ({}) }) protected drawerOptions!: L.Control.DrawConstructorOptions;
     @Prop({ type: Object, default: () => ({}) }) protected controlOptions!: CsmMapControlOptions;
     @Prop({ type: Object, default: () => ({}) }) protected popupOptions!: L.PopupOptions;
+    @Prop({
+        type: Object,
+        default: () => ({
+            disableClusteringAtZoom: 16,
+            spiderfyOnMaxZoom: true
+        })
+    }) protected markerClusterOptions!: any;
 
     protected mounted(): void {
         this.$nextTick(() => {
@@ -513,14 +546,19 @@ export default class Map extends Vue {
         });
     }
 
+
     protected addSidebarToMap(sidebar: L.Control.Sidebar) {
         if (this.map) {
             sidebar.addTo(this.map);
         }
     }
 
-    protected handleSidebarTabChange(sidebarPaneId: string) {
-        this.$emit("update:active-sidebar-pane", sidebarPaneId);
+    protected getLayerMarkers(dataLayer: CsmDataMapLayer): CsmMarker[] {
+        return Array.isArray(dataLayer.markers) ? dataLayer.markers : [];
+    }
+
+    protected getLayerGeoJson(dataLayer: CsmDataMapLayer): CsmGeoJson[] {
+        return Array.isArray(dataLayer.geoJsonObjects) ? dataLayer.geoJsonObjects : [];
     }
 
     protected isMarker(representation: CsmMapObject): boolean {
@@ -531,9 +569,22 @@ export default class Map extends Vue {
         return Constants.MAP_OBJECT_TYPE.GEOJSON === representation.type;
     }
 
+    protected handleSidebarTabChange(sidebarPaneId: string) {
+        this.$emit("update:active-sidebar-pane", sidebarPaneId);
+    }
+
+    protected isClusterLayer(dataLayer: CsmDataMapLayer): boolean {
+        return !!dataLayer.markerClusterable;
+    }
+
     protected mapClick(event: L.LeafletMouseEvent) {
         this.$emit("map-click", event);
     }
+
+    private clusterOptions = {
+        disableClusteringAtZoom: 12,
+        spiderfyOnMaxZoom: false
+    };
 
     protected mapRightClick(event: L.LeafletMouseEvent) {
         this.$emit("map-right-click", event);
@@ -541,6 +592,10 @@ export default class Map extends Vue {
 
     protected handleDraw(event: L.LeafletMouseEvent) {
         this.$emit("map-draw", event);
+    }
+
+    protected handleMapMoveEnd(event: L.LeafletEvent) {
+        this.$emit("map-move-end", event);
     }
 
     protected objectClick(
@@ -591,5 +646,73 @@ export default class Map extends Vue {
             popupLayer.openPopup(latLng);
         });
     }
+
+    public getAllMarkers(): L.Marker[] {
+        const refs = this.$refs.markers as any[];
+
+        if (!refs || !Array.isArray(refs)) {
+            return [];
+        }
+
+        const markers: L.Marker[] = [];
+
+        refs.forEach(clusterComp => {
+            const cluster = clusterComp.mapObject;
+            markers.push(...cluster.getAllChildMarkers());
+        });
+
+        return markers;
+    }
+
+    protected isOwnersLayer(dataLayerId: string): boolean {
+        return dataLayerId === "owners";
+    }
+
+    protected getMarkerClusterKey(dataLayerId: string): string {
+        return dataLayerId;
+    }
+
+    protected getMarkerClusterOptions(dataLayer: CsmDataMapLayer): any {
+
+        const cssClass = dataLayer.id === "board-recommendation"
+            ? "marker-cluster marker-cluster--recommendation"
+            : dataLayer.id === "board-contract"
+                ? "marker-cluster marker-cluster--contract"
+                : dataLayer.id === "competitor"
+                    ? "marker-cluster marker-cluster--competitor"
+                    : "marker-cluster";
+
+        const iconAnchor = dataLayer.id === "board-recommendation"
+            ? new L.Point(26, 14)
+            : dataLayer.id === "board-contract"
+                ? new L.Point(14, 26)
+                : dataLayer.id === "competitor"
+                    ? new L.Point(20, 20)
+                    : new L.Point(20, 20);
+
+        return _.merge(
+            {},
+            this.markerClusterOptions,
+            true,
+            {
+                singleMarkerMode: false,
+                maxClusterRadius: (zoom: number) => {
+                    if (zoom <= 10) return 140;
+                    if (zoom <= 12) return 100;
+
+                    return _.get(this.markerClusterOptions, "maxClusterRadius", 50);
+                },
+                iconCreateFunction: (cluster: any) => {
+                    return new L.DivIcon({
+                        html: `<div><span>${cluster.getChildCount()}</span></div>`,
+                        className: cssClass,
+                        iconSize: new L.Point(40, 40),
+                        iconAnchor,
+                    });
+                },
+            }
+        );
+    }
+
 }
 </script>

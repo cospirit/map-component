@@ -1,3 +1,6 @@
+@import "~leaflet.markercluster/dist/MarkerCluster.css";
+@import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+
 .csm-map {
   height: 100%;
   width: 100%;
@@ -8,17 +11,69 @@
 
   .leaflet-container {
     $cursors: auto,default,none,context-menu,help,pointer,
-      progress,wait,cell,crosshair,text,vertical-text,alias,
-      copy,move,no-drop,not-allowed,e-resize,n-resize,ne-resize,
-      nw-resize,s-resize,se-resize,sw-resize,w-resize,ew-resize,
-      ns-resize,nesw-resize,nwse-resize,col-resize,row-resize,
-      all-scroll,zoom-in,zoom-out,grab,grabbing
-    ;
+    progress,wait,cell,crosshair,text,vertical-text,alias,
+    copy,move,no-drop,not-allowed,e-resize,n-resize,ne-resize,
+    nw-resize,s-resize,se-resize,sw-resize,w-resize,ew-resize,
+    ns-resize,nesw-resize,nwse-resize,col-resize,row-resize,
+    all-scroll,zoom-in,zoom-out,grab,grabbing
+  ;
 
     @each $cursor in $cursors {
       &.#{$cursor}-cursor {
         cursor: $cursor;
       }
     }
+  }
+  .marker-cluster {
+    background-color: rgba(230, 81, 0, 0.6);
+    z-index: 1000;
+  }
+
+  .marker-cluster:hover {
+    z-index: 9999 !important;
+  }
+
+  .marker-cluster--contract {
+    background-color: rgba(47, 128, 237, 0.6);
+    transform: translate(-6px, 6px);
+    z-index: 1000;
+  }
+
+  .marker-cluster--contract div {
+    background-color: rgba(47, 128, 237, 0.85);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  }
+
+  .marker-cluster--recommendation {
+    background-color: rgba(224, 14, 74, 0.6);
+    transform: translate(6px, -6px);
+    z-index: 520;
+  }
+
+  .marker-cluster--recommendation div {
+    background-color: rgba(224, 14, 74, 0.85);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  }
+
+  .marker-cluster--contract:hover,
+  .marker-cluster--recommendation:hover,
+  .marker-cluster--competitor:hover {
+    z-index: 9999;
+  }
+
+  .marker-cluster--competitor {
+    background-color: rgba(106, 106, 106, 0.6);
+    z-index: 500;
+  }
+
+  .marker-cluster--competitor div {
+    background-color: rgba(106 ,106,  106, 0.5);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  }
+
+  .marker-cluster span {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
   }
 }
