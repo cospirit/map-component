@@ -353,6 +353,7 @@ export default class Map extends Vue {
             spiderfyOnMaxZoom: true
         })
     }) protected markerClusterOptions!: any;
+
     protected mounted(): void {
         this.$nextTick(() => {
             this.map = _.get(this.$refs, "myMap.mapObject", null) as L.Map | null;
@@ -677,13 +678,17 @@ export default class Map extends Vue {
             ? "marker-cluster marker-cluster--recommendation"
             : dataLayer.id === "board-contract"
                 ? "marker-cluster marker-cluster--contract"
-                : "marker-cluster";
+                : dataLayer.id === "competitor"
+                    ? "marker-cluster marker-cluster--competitor"
+                    : "marker-cluster";
 
         const iconAnchor = dataLayer.id === "board-recommendation"
             ? new L.Point(26, 14)
             : dataLayer.id === "board-contract"
                 ? new L.Point(14, 26)
-                : new L.Point(20, 20);
+                : dataLayer.id === "competitor"
+                    ? new L.Point(20, 20)
+                    : new L.Point(20, 20);
 
         return _.merge(
             {},
